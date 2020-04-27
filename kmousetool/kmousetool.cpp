@@ -30,6 +30,7 @@
 #include <X11/StringDefs.h>    /* Standard Name-String definitions*/
 #include <X11/extensions/xtestext1.h>    /* Standard Name-String definitions*/
 #include <X11/extensions/XTest.h>    /* Standard Name-String definitions*/
+#include <X11/extensions/XInput2.h>
 #include <fixx11h.h>
 
 #include <QAbstractEventDispatcher>
@@ -64,6 +65,8 @@ int rightButton;
 */
 void queryPointer(Window *pidRoot, int *pnRx, int *pnRy, int *pnX, int *pnY, unsigned int *puMask);
 int CursorHasMoved(int minMovement);
+void SetupEventHandlers();
+int CursorIsInhibited();
 void getMouseButtons();
 void LeftClick();
 void RightClick();
@@ -131,6 +134,10 @@ void KMouseTool::setDefaultSettings()
 }
 
 
+/*
+EVERFREE:
+So my thoughts are we can make this look for an inhibit file or something
+*/
 void KMouseTool::timerEvent( QTimerEvent * )
 {
     if (!mousetool_is_running)
@@ -157,6 +164,13 @@ void KMouseTool::timerEvent( QTimerEvent * )
 
     if (tick_count<max_ticks)
         tick_count++;
+    
+    // CursorIsInhibited();
+    if (CursorIsInhibited()) {
+        if (!smart_drag_on || !mouse_is_down) {
+            tick_count = max_ticks;
+        }
+    }
 
     // If the mouse has paused ...
         if (tick_count==dwell_time) {
@@ -246,6 +260,7 @@ KMouseTool::KMouseTool(QWidget *parent, const char *name)
     // So, tell MT we're just starting
     mousetool_just_started = true;
 
+    SetupEventHandlers();
     startTimer(100);
     trayIcon = new KMouseToolTray (this);
     updateStartStopText ();
@@ -358,6 +373,60 @@ int CursorHasMoved (int minMovement)
     }
 
     return nRes;
+}
+
+int xi_opcode;
+void SetupEventHandlers()
+{
+    int evt, err;
+    XQueryExtension(display, "XInputExtension", &xi_opcode, &evt, &err);
+    // TODO handle error and do nothing?
+
+    XIEventMask m;
+    Window win = DefaultRootWindow(display);
+    m.deviceid = XIAllDevices;
+    m.mask_len = XIMaskLen(XI_LASTEVENT);
+    m.mask = (unsigned char *)calloc(m.mask_len, sizeof(char));
+    XISetMask(m.mask, XI_RawButtonPress);
+    XISetMask(m.mask, XI_RawButtonRelease);
+
+    XISelectEvents(display, win, &m, 1);
+    XSync(display, False);
+    free(m.mask);
+}
+
+int CursorIsInhibited()
+{
+    // The uninhibit mask delays uninhibiting bits from button releases by
+    // one processing cycle. That way, scroll events, which fire a press
+    // and release simultaneously, can actually inhibit the dwell click.
+    static unsigned long int inhibit_mask;
+    static unsigned long int uninhibit_mask;
+
+    inhibit_mask &= ~uninhibit_mask;
+    uninhibit_mask = 0;
+
+    while (XPending(display) > 0)
+    {
+        XEvent ev;
+        XGenericEventCookie *cookie = &ev.xcookie;
+        XNextEvent(display, &ev);
+        if (XGetEventData(display, cookie) && cookie->type == GenericEvent && cookie->extension == xi_opcode)
+        {
+            XIRawEvent *data = (XIRawEvent *)cookie->data;
+            switch (cookie->evtype)
+            {
+            case XI_RawButtonPress:
+                inhibit_mask |= 1 << data->detail;
+                break;
+            case XI_RawButtonRelease:
+                uninhibit_mask |= 1 << data->detail;
+                break;
+            }
+        }
+    }
+
+    return inhibit_mask != 0;
 }
 // End mouse monitoring and event creation code
 

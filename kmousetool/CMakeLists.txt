@@ -27,6 +27,7 @@ target_link_libraries(kmousetool
   KF5::XmlGui
   ${X11_XTest_LIB}
   ${X11_Xext_LIB}
+  ${X11_Xinput_LIB}
   ${X11_LIBRARIES})
 
 install(TARGETS kmousetool  ${INSTALL_TARGETS_DEFAULT_ARGS} )
