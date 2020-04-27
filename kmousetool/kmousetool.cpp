@@ -134,10 +134,6 @@ void KMouseTool::setDefaultSettings()
 }
 
 
-/*
-EVERFREE:
-So my thoughts are we can make this look for an inhibit file or something
-*/
 void KMouseTool::timerEvent( QTimerEvent * )
 {
     if (!mousetool_is_running)
