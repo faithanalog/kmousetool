@@ -244,7 +244,7 @@ KMouseTool::KMouseTool(QWidget *parent, const char *name)
     connect(cbClick, &QCheckBox::stateChanged, this, &KMouseTool::settingsChanged);
     connect(cbStart, &QCheckBox::stateChanged, this, &KMouseTool::settingsChanged);
 
-    connect(buttonStartStop, &QAbstractButton::clicked, this, &KMouseTool::startStopSelected);
+    connect(buttonStartStop, &QAbstractButton::clicked, this, &KMouseTool::toggleMouseTool);
     connect(buttonBoxSettings->button(QDialogButtonBox::RestoreDefaults), &QAbstractButton::clicked, this, &KMouseTool::defaultSelected);
     connect(buttonBoxSettings->button(QDialogButtonBox::Reset), &QAbstractButton::clicked, this, &KMouseTool::resetSelected);
     connect(buttonBoxSettings->button(QDialogButtonBox::Apply), &QAbstractButton::clicked, this, &KMouseTool::applySelected);
@@ -261,7 +261,7 @@ KMouseTool::KMouseTool(QWidget *parent, const char *name)
     startTimer(100);
     trayIcon = new KMouseToolTray (this);
     updateStartStopText ();
-    connect(trayIcon, &KMouseToolTray::startStopSelected, this, &KMouseTool::startStopSelected);
+    connect(trayIcon, &KMouseToolTray::toggleMouseTool, this, &KMouseTool::toggleMouseTool);
     connect(trayIcon, &KMouseToolTray::configureSelected, this, &KMouseTool::configureSelected);
     connect(trayIcon, &KMouseToolTray::aboutSelected, this, &KMouseTool::aboutSelected);
     connect(trayIcon, &KMouseToolTray::helpSelected, this, &KMouseTool::helpSelected);
@@ -577,9 +577,13 @@ void KMouseTool::settingsChanged ()
 }
 
 // Buttons within the dialog
-void KMouseTool::startStopSelected()
+void KMouseTool::toggleMouseTool()
 {
-    mousetool_is_running = !mousetool_is_running;
+    setMouseToolRunning(!mousetool_is_running);
+}
+
+void KMouseTool::setMouseToolRunning(bool new_mousetool_state) {
+    mousetool_is_running = new_mousetool_state;
     updateStartStopText();
 }
 
@@ -664,7 +668,7 @@ void KMouseTool::aboutSelected()
 KMouseToolTray::KMouseToolTray (QWidget *parent) : KStatusNotifierItem(parent)
 {
     setStatus(KStatusNotifierItem::Active);
-    startStopAct = contextMenu()->addAction (i18nc("Start tracking the mouse", "&Start"), this, &KMouseToolTray::startStopSelected);
+    startStopAct = contextMenu()->addAction (i18nc("Start tracking the mouse", "&Start"), this, &KMouseToolTray::toggleMouseTool);
     contextMenu()->addSeparator();
     QAction* act;
     act = contextMenu()->addAction (i18n("&Configure KMouseTool..."), this, &KMouseToolTray::configureSelected);

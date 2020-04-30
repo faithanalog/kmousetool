@@ -152,7 +152,8 @@ public Q_SLOTS:
      **/
     void settingsChanged();
 
-    Q_SCRIPTABLE void startStopSelected();
+    Q_SCRIPTABLE void toggleMouseTool();
+    Q_SCRIPTABLE void setMouseToolRunning(bool new_mousetool_state);
 
     void defaultSelected();
     void resetSelected();
@@ -199,7 +200,7 @@ public:
 
     void updateStartStopText (bool mousetool_is_running);
 Q_SIGNALS:
-    void startStopSelected();
+    void toggleMouseTool();
     void configureSelected();
     void aboutSelected();
     void helpSelected();
