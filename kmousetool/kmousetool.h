@@ -152,7 +152,7 @@ public Q_SLOTS:
      **/
     void settingsChanged();
 
-    void startStopSelected();
+    Q_SCRIPTABLE void startStopSelected();
 
     void defaultSelected();
     void resetSelected();
