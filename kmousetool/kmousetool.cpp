@@ -66,7 +66,7 @@ int rightButton;
 */
 void queryPointer(Window *pidRoot, int *pnRx, int *pnRy, int *pnX, int *pnY, unsigned int *puMask);
 int CursorHasMoved(int minMovement);
-void SetupEventHandlers();
+void MaskX11MouseEvents();
 int CursorIsInhibited();
 void getMouseButtons();
 void LeftClick();
@@ -257,7 +257,7 @@ KMouseTool::KMouseTool(QWidget *parent, const char *name)
     // So, tell MT we're just starting
     mousetool_just_started = true;
 
-    SetupEventHandlers();
+    MaskX11MouseEvents();
     startTimer(100);
     trayIcon = new KMouseToolTray (this);
     updateStartStopText ();
@@ -378,7 +378,7 @@ int CursorHasMoved (int minMovement)
 }
 
 int xi_opcode;
-void SetupEventHandlers()
+void MaskX11MouseEvents()
 {
     int evt, err;
     XQueryExtension(display, "XInputExtension", &xi_opcode, &evt, &err);
