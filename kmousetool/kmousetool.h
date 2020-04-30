@@ -25,6 +25,7 @@
 #include <QLabel>
 #include <QTimerEvent>
 #include <QWidget>
+#include <QDBusAbstractAdaptor>
 
 #include "version.h"
 
@@ -145,6 +146,7 @@ private:
     bool isAutostart();
     void setAutostart (bool start);
 
+
 public Q_SLOTS:
     /**
      * This slot is called whenever a value in the settings window was changed.
@@ -154,6 +156,7 @@ public Q_SLOTS:
 
     Q_SCRIPTABLE void toggleMouseTool();
     Q_SCRIPTABLE void setMouseToolRunning(bool new_mousetool_state);
+    Q_SCRIPTABLE bool getMouseToolRunning();
 
     void defaultSelected();
     void resetSelected();

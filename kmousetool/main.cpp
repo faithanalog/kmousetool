@@ -27,6 +27,8 @@
 #include <KSharedConfig>
 
 #include <QCommandLineParser>
+#include <QDBusConnection>
+
 
 static const char description[] = I18N_NOOP("KMouseTool");
 
@@ -63,6 +65,11 @@ int main(int argc, char *argv[])
     KDBusService service(KDBusService::Unique, &app);
 
     KMouseTool *kmousetool = new KMouseTool();
+    // Hook up a dbus message to toggle mousetool, so we can bind keys to it
+    if (QDBusConnection::sessionBus().isConnected() && QDBusConnection::sessionBus().registerService(QLatin1String("org.kde.kmousetool")))
+    {
+        QDBusConnection::sessionBus().registerObject(QLatin1String("/"), kmousetool, QDBusConnection::ExportScriptableSlots);
+    }
 
     if (!KSharedConfig::openConfig()->group("UserOptions").readEntry("IsMinimized", false))
         kmousetool->show();

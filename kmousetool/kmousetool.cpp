@@ -42,7 +42,6 @@
 #include <QTimerEvent>
 #include <QFile>
 #include <QFileInfo>
-#include <QDBusConnection>
 
 #include <KConfig>
 #include <KConfigGroup>
@@ -267,10 +266,6 @@ KMouseTool::KMouseTool(QWidget *parent, const char *name)
     connect(trayIcon, &KMouseToolTray::helpSelected, this, &KMouseTool::helpSelected);
     connect(trayIcon, SIGNAL(quitSelected()), this, SLOT(quitSelected()));
 
-    // Hook up a dbus message to toggle mousetool, so we can bind keys to it
-    if (QDBusConnection::sessionBus().isConnected() && QDBusConnection::sessionBus().registerService(QLatin1String("org.kde.kmousetool"))) {
-        QDBusConnection::sessionBus().registerObject(QLatin1String("/"), this, QDBusConnection::ExportScriptableSlots);
-    }
 }
 
 KMouseTool::~KMouseTool()
@@ -584,7 +579,15 @@ void KMouseTool::toggleMouseTool()
 
 void KMouseTool::setMouseToolRunning(bool new_mousetool_state) {
     mousetool_is_running = new_mousetool_state;
+    if (new_mousetool_state) {
+        tick_count = max_ticks;
+        mousetool_just_started = true;
+    }
     updateStartStopText();
+}
+
+bool KMouseTool::getMouseToolRunning() {
+    return mousetool_is_running;
 }
 
 void KMouseTool::defaultSelected()
